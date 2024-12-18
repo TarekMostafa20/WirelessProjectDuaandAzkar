@@ -43,9 +43,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onCategoryClick(String category) {
-        // testing
-        Toast.makeText(this, "Selected: " + category, Toast.LENGTH_SHORT).show();
 
-        //here what should app do after click?
+        Intent intent = new Intent(this, DetailActivity.class);
+
+
+        intent.putExtra("category", category);
+
+
+        startActivity(intent);
     }
 }
