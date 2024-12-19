@@ -1,15 +1,13 @@
 package com.example.wireless_project_duaandazkar;
 
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -26,30 +24,18 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        //categories
-        categoryList = new ArrayList<>();
-        categoryList.add("Dua after Salah");
-        categoryList.add("Morning Azkar");
-        categoryList.add("Evening Azkar");
-        categoryList.add("Daily Essential Dua");
-        categoryList.add("40 Dua begins with 'Rabbana'");
-        categoryList.add("Ruquiya (Audio Only)");
-        categoryList.add("Missed Rak’ah Procedure");
-        categoryList.add("Hajj & Umrah");
+        // Fetch categories from database
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        categoryList = dbHelper.getCategories(db);
 
-        //adapter
         adapter = new CategoryAdapter(categoryList, this::onCategoryClick);
         recyclerView.setAdapter(adapter);
     }
 
     private void onCategoryClick(String category) {
-
         Intent intent = new Intent(this, DetailActivity.class);
-
-
         intent.putExtra("category", category);
-
-
         startActivity(intent);
     }
 }
