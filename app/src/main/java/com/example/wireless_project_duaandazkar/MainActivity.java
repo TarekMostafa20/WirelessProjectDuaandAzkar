@@ -3,6 +3,7 @@ package com.example.wireless_project_duaandazkar;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -31,6 +32,11 @@ public class MainActivity extends AppCompatActivity {
 
         adapter = new CategoryAdapter(categoryList, this::onCategoryClick);
         recyclerView.setAdapter(adapter);
+        Button btnSetReminder = findViewById(R.id.btnSetReminder);
+        btnSetReminder.setOnClickListener(v -> {
+            Intent intent = new Intent(this, SetNotificationActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void onCategoryClick(String category) {
