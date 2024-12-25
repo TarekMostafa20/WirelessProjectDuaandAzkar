@@ -1,6 +1,7 @@
 package com.example.wireless_project_duaandazkar;
 
 import android.graphics.Color;
+import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.text.Spannable;
@@ -44,17 +45,8 @@ public class DuaAdapter extends RecyclerView.Adapter<DuaAdapter.ViewHolder> {
             @Override
             public void onClick(View v) {
                 String fullText = dua.getText();
+                String[] words = fullText.split(" "); // Split text into words
                 Spannable spannable = new SpannableString(fullText);
-
-                // Highlight the entire text
-                spannable.setSpan(
-                        new BackgroundColorSpan(Color.YELLOW), // Set highlight color
-                        0, // Start index
-                        fullText.length(), // End index
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                );
-
-                holder.duaText.setText(spannable); // Apply highlighted text
 
                 if (t != null) {
                     t.stop();
@@ -68,16 +60,16 @@ public class DuaAdapter extends RecyclerView.Adapter<DuaAdapter.ViewHolder> {
                             t.setLanguage(new Locale("ar"));
                             t.setSpeechRate(1.0f);
 
-                            // Add a listener to clear the highlight after TTS finishes
+                            // Set up utterance progress listener
                             t.setOnUtteranceProgressListener(new UtteranceProgressListener() {
                                 @Override
                                 public void onStart(String utteranceId) {
-                                    // No action on start
+                                    // No action needed on start
                                 }
 
                                 @Override
                                 public void onDone(String utteranceId) {
-                                    // Remove highlight on UI thread
+                                    // Clear highlight on UI thread
                                     holder.duaText.post(() -> holder.duaText.setText(fullText));
                                 }
 
@@ -85,9 +77,26 @@ public class DuaAdapter extends RecyclerView.Adapter<DuaAdapter.ViewHolder> {
                                 public void onError(String utteranceId) {
                                     // Handle errors if needed
                                 }
+
+                                @Override
+                                public void onRangeStart(String utteranceId, int start, int end, int frame) {
+                                    // Highlight the current word being spoken
+                                    holder.duaText.post(() -> {
+                                        spannable.setSpan(
+                                                new BackgroundColorSpan(Color.YELLOW), // Highlight color
+                                                start,
+                                                end,
+                                                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                                        );
+                                        holder.duaText.setText(spannable);
+                                    });
+                                }
                             });
 
-                            t.speak(dua.getText(), TextToSpeech.QUEUE_FLUSH, null, "DuaUtteranceId");
+                            // Convert the text to a speakable utterance
+                            Bundle params = new Bundle();
+                            params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f);
+                            t.speak(fullText, TextToSpeech.QUEUE_FLUSH, params, "DuaUtteranceId");
                         }
                     }
                 });

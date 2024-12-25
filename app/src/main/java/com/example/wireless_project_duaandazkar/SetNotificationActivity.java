@@ -31,12 +31,26 @@ public class SetNotificationActivity extends AppCompatActivity {
         btnSetNotification.setOnClickListener(v -> setNotification());
     }
 
-    @SuppressLint("ScheduleExactAlarm")
+    private boolean isExactAlarmPermissionGranted() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return alarmManager != null && alarmManager.canScheduleExactAlarms();
+        }
+        return true;
+    }
+
+    @SuppressLint("UnspecifiedImmutableFlag")
     private void setNotification() {
+        if (!isExactAlarmPermissionGranted()) {
+            Toast.makeText(this, "Exact alarm permission required. Enable it in app settings.", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+            startActivity(intent);
+            return;
+        }
+
         int hour = timePicker.getHour();
         int minute = timePicker.getMinute();
 
-        // إعداد الوقت للإشعار
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, hour);
         calendar.set(Calendar.MINUTE, minute);
@@ -48,20 +62,16 @@ public class SetNotificationActivity extends AppCompatActivity {
 
         Log.d("SetNotification", "Notification set for: " + calendar.getTime());
 
-        // الحصول على AlarmManager
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-        // إنشاء PendingIntent
-        Intent intent = new Intent(this, NotificationReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                this,
-                0,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
-
-        // التحقق من AlarmManager وتعيين الإشعار
         if (alarmManager != null) {
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                    this,
+                    0,
+                    new Intent(this, NotificationReceiver.class),
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 alarmManager.setExactAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP,
@@ -79,6 +89,16 @@ public class SetNotificationActivity extends AppCompatActivity {
             Toast.makeText(this, "Notification set for " + hour + ":" + minute, Toast.LENGTH_SHORT).show();
         } else {
             Log.e("SetNotification", "AlarmManager is null!");
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!isExactAlarmPermissionGranted()) {
+                Toast.makeText(this, "Permission still not granted. Please enable exact alarms.", Toast.LENGTH_LONG).show();
+            }
         }
     }
 }
